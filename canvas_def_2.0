@@ -1,0 +1,167 @@
+<head>
+<meta charset="utf-8" />
+<title>HTML5 Canvas Defender</title>
+<style>
+body {
+  padding:0;
+  margin:0;
+  background:#666;
+}
+canvas {
+  display:block;
+  margin:30px auto 0;
+  border:1px dashed #ccc;
+  background:#FFF;
+}
+</style>
+<script>
+var canvas,
+    ctx,
+    width = 600,
+    height = 600,
+	
+    enemyTotal = 11,
+	enemyRows = 4,
+    enemies1 = [],
+	enemies2 = [],
+	enemies3 = [],
+	enemies4 = [],
+	all_enemies = [],
+    enemy_x = -60,
+    enemy_y = 10,
+    enemy_w = 50,
+    enemy_h = 50,
+    speed = 3,
+    rightKey = false,
+    leftKey = false,
+    upKey = false,
+    downKey = false,
+	ship,
+    ship_x = (width / 2) - 25, ship_y = height - 75, ship_w = 50, ship_h = 50,
+	laserTotal = 4,
+	lasers = [];
+
+for (var i = 0; i < enemyTotal; i++) {
+ enemies1.push([enemy_x, enemy_y, enemy_w, enemy_h, speed]);
+ enemies2.push([enemy_x, enemy_y, enemy_w, enemy_h, speed]);
+ enemies3.push([enemy_x, enemy_y, enemy_w, enemy_h, speed]);
+ enemies4.push([enemy_x, enemy_y, enemy_w, enemy_h, speed]);
+ enemy_x += enemy_w + 10;
+}
+
+all_enemies.push(enemies1);
+all_enemies.push(enemies2);
+all_enemies.push(enemies3);
+all_enemies.push(enemies4);
+
+
+function clearCanvas() {
+ ctx.clearRect(0,0,width,height);
+}
+
+function drawEnemies() {
+ for (var i = 0; i < all_enemies.length; i++) {
+	for (var j = 0; j < all_enemies[i].length; i++) {
+                ctx.fillStyle = '#f00';
+		ctx.fillRect(all_enemies[i][j][0], all_enemies[i][j][1], enemy_w, enemy_h);
+ }
+}
+
+function drawShip() {
+ if (rightKey) ship_x += 5;
+ else if (leftKey) ship_x -= 5;
+ if (upKey) ship_y -= 5;
+ else if (downKey) ship_y += 5;
+ if (ship_x <= 0) ship_x = 0;
+ if ((ship_x + ship_w) >= width) ship_x = width - ship_w;
+  if (ship_y <= 0) ship_y = 0;
+ if ((ship_y + ship_h) >= height) ship_y = height - ship_h;
+  ctx.drawImage(ship,ship_x,ship_y);
+}
+
+function moveEnemies() {
+  for (var i = 0; i < enemies1.length; i++) {
+   if (enemies1[i][0] < width) {
+     enemies1[i][0] += enemies1[i][4];
+   } else if (enemies1[i][0] > width - 1) {
+      enemies1[i][0] = -60;
+    }
+  }
+}
+
+function drawLaser() {
+  if (lasers.length)
+    for (var i = 0; i < lasers.length; i++) {
+     ctx.fillStyle = '#f00';
+     ctx.fillRect(lasers[i][0],lasers[i][1],lasers[i][2],lasers[i][3])
+   }
+}
+function moveLaser() {
+ for (var i = 0; i < lasers.length; i++) {
+   if (lasers[i][1] > -11) {
+      lasers[i][1] -= 10;
+    } else if (lasers[i][1] < -10) {
+     lasers.splice(i, 1);
+   }
+ }
+}
+
+function hitTest() {
+ var remove = false;
+ for (var i = 0; i < lasers.length; i++) {
+   for (var j = 0; j < enemies1.length; j++) {
+     if (lasers[i][1] <= (enemies1[j][1] + enemies1[j][3]) && lasers[i][0] >= enemies1[j][0] && lasers[i][0] <= (enemies1[j][0] + enemies1[j][2])) {
+       remove = true;
+        enemies1.splice(j, 1);
+                                //enemies1.push([(Math.random() * 500) + 50, -45, enemy_w, enemy_h, speed]);
+      }
+    }
+    if (remove == true) {
+      lasers.splice(i, 1);
+      remove = false;
+    }
+  }
+}
+
+function init() {
+  canvas = document.getElementById('canvas');
+  ctx = canvas.getContext('2d');
+  ship = new Image()
+  ship.src = "def.png";
+  setInterval(gameLoop, 25);
+  document.addEventListener('keydown', keyDown, false);
+  document.addEventListener('keyup', keyUp, false);
+}
+function gameLoop() {
+  clearCanvas();
+  hitTest();
+  moveEnemies();
+  moveLaser();
+  drawEnemies();
+  drawShip();
+  drawLaser();
+}
+
+function keyDown(e) {
+  if (e.keyCode == 39) rightKey = true;
+  else if (e.keyCode == 37) leftKey = true;
+  if (e.keyCode == 38) upKey = true;
+  else if (e.keyCode == 40) downKey = true;
+  if (e.keyCode == 88 && lasers.length <= laserTotal) lasers.push([ship_x + 25, ship_y - 20, 4, 20]);
+}
+
+function keyUp(e) {
+  if (e.keyCode == 39) rightKey = false;
+  else if (e.keyCode == 37) leftKey = false;
+  if (e.keyCode == 38) upKey = false;
+  else if (e.keyCode == 40) downKey = false;
+}
+
+window.onload = init;
+</script>
+</head>
+
+<body>
+  <canvas id="canvas" width="600" height="600"></canvas>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<head>
+<meta charset="utf-8" />
+<title>HTML5 Canvas Defender</title>
+<style>
+body {
+  padding:0;
+  margin:0;
+  background:#666;
+}
+canvas {
+  display:block;
+  margin:30px auto 0;
+  border:1px dashed #ccc;
+  background:#FFF;
+}
+</style>
+<script>
+var canvas,
+    ctx,
+    width = 600,
+    height = 600,
+	shoot = false;
+    enemyTotal = 11,
+	enemyRows = 4,
+    enemies1 = [],
+	enemies2 = [],
+	enemies3 = [],
+	enemies4 = [],
+	all_enemies = [],
+	winline_x = 10,
+	winline_y = 10,
+	winline_h = 20,
+	winline_w = width - 20
+    enemy_x = -60,
+    enemy_y = 40,
+    enemy_w = 50,
+    enemy_h = 50,
+	field_x = 0,
+	field_w = width/6,
+	field_h = 20,
+	field_y = height - field_h - 10,
+    win = false,
+	row_y = enemy_w + 10,
+    speed = 3,
+    rightKey = false,
+    leftKey = false,
+    upKey = false,
+    downKey = false,
+	
+    ship_x = (width / 2) - 25, ship_y = height - 90, ship_w = 50, ship_h = 50,
+	laserTotal = 4,
+	lasers = [];
+
+for (var i = 0; i < enemyTotal; i++) {
+ enemies1.push([enemy_x + 60, enemy_y, enemy_w, enemy_h, speed + 1, generateColors(), false]);
+ enemies2.push([enemy_x, enemy_y + row_y, enemy_w, enemy_h, speed, generateColors(), false]);
+ enemies3.push([enemy_x + 60, enemy_y + row_y*2, enemy_w, enemy_h, speed - 1, generateColors(), false]);
+ enemies4.push([enemy_x, enemy_y + row_y*3, enemy_w, enemy_h, speed - 2, generateColors(), false]);
+ enemy_x += enemy_w + 10;
+}
+
+all_enemies.push(enemies1);
+all_enemies.push(enemies2);
+all_enemies.push(enemies3);
+all_enemies.push(enemies4);
+
+function generateColors() {
+	return Math.floor(Math.random()*4);
+}
+
+function chooseColor(object) {
+	switch(object) {
+			case 0: return "#f00"; 
+			case 1: return "#0f0"; 
+			case 2: return "#ff0"; 
+			case 3: return "#0ff"; 
+			case 4: return "#00f"; 
+			case 5: return "#f0f"; 
+			default: return "#fff"; 
+        }
+}
+
+function chooseLaser(){
+	if ((ship_x>=0) && (ship_x<width/6)) { return 0;  }
+		else if ((ship_x>=width/6) && (ship_x<2*width/6)) { return 1;  }
+		else if ((ship_x>=2*width/6) && (ship_x<3*width/6)) { return 2;  }
+		else if ((ship_x>=3*width/6) && (ship_x<4*width/6)) { return 3;  }
+		else if((ship_x>=4*width/6) && (ship_x<5*width/6)) { return 4;  }
+		else if((ship_x>=5*width/6) && (ship_x<=width)) { return 5;  }
+	    else alarm("danger!");
+}
+
+function clearCanvas() {
+ ctx.clearRect(0,0,width,height);
+}
+
+function drawEnemies() {
+
+  //if(!win) {	
+	for (var i = 0; i < 6; i++){
+		ctx.fillStyle = chooseColor(i);
+		ctx.fillRect(field_x + field_w*i, field_y, field_w, field_h);
+	}
+	ctx.fillStyle = chooseColor(chooseLaser());
+	ctx.fillRect(winline_x, winline_y, winline_w, winline_h);
+
+	 for (var i = 0; i < all_enemies.length; i++) {
+		for (var j = 0; j < all_enemies[i].length; j++) {
+			/*switch(all_enemies[i][j][5]) {
+				case 0: ctx.fillStyle = '#f00'; break;
+				case 1: ctx.fillStyle = '#0f0'; break;
+				case 2: ctx.fillStyle = '#ff0'; break;
+				case 3: ctx.fillStyle = '#0ff'; break;
+				case 4: ctx.fillStyle = '#fc0'; break;
+				case 5: ctx.fillStyle = '#f0f'; break;
+				default: ctx.fillStyle = '#fff'; break;
+			}*/
+			if ( ( (all_enemies[i][j][6] == true)&&(all_enemies[i][j][0] > width - 1) ) || ( (all_enemies[i][j][6] == true)&&(all_enemies[i][j][0] + all_enemies[i][j][2] < 2) ) ) {
+				all_enemies[i][j][5] = generateColors();
+				ctx.fillStyle = chooseColor(all_enemies[i][j][5]);
+				all_enemies[i][j][6] = false;
+			}
+			else if (all_enemies[i][j][6] == true) ctx.fillStyle = '#fff';
+			else ctx.fillStyle = chooseColor(all_enemies[i][j][5]);
+			ctx.fillRect(all_enemies[i][j][0], all_enemies[i][j][1], enemy_w, enemy_h);
+		}
+	 }
+   /*} else {
+		for (var i = 0; i < 6; i++){
+			ctx.fillStyle = chooseColor(i);
+			ctx.fillRect(field_x + field_w*i, field_y, field_w, field_h);
+		}
+		ctx.fillStyle = '#000';
+		ctx.fillRect(winline_x, winline_y, winline_w, winline_h);
+		for (var i = 0; i < all_enemies.length; i++) {
+			for (var j = 0; j < all_enemies[i].length; j++) {
+				ctx.fillStyle = '#000';
+				ctx.fillRect(all_enemies[i][j][0], all_enemies[i][j][1], enemy_w, enemy_h);
+			}
+		}
+	 }*/
+}
+
+function drawShip() {
+ if (rightKey) ship_x += 5;
+ else if (leftKey) ship_x -= 5;
+ /*if (upKey) ship_y -= 5;
+ else if (downKey) ship_y += 5;*/
+ if (ship_x <= 0) ship_x = 0;
+ if ((ship_x + ship_w) >= width) ship_x = width - ship_w;
+  if (ship_y <= 0) ship_y = 0;
+ if ((ship_y + ship_h) >= height) ship_y = height - ship_h;
+  ctx.drawImage(ship,ship_x,ship_y);
+}
+
+function moveEnemies() {
+  //if (!win) { 
+	  for (var i = 0; i < all_enemies.length; i++) {
+		for (var j = 0; j < all_enemies[i].length; j++) {
+			if ( ((i+1)%2) == 0){
+				if (all_enemies[i][j][0] < width) {
+					all_enemies[i][j][0] += all_enemies[i][j][4];
+				} else if (all_enemies[i][j][0] > width - 1) {
+					all_enemies[i][j][0] = -60;
+				}
+			} else {
+				if (all_enemies[i][j][0] + all_enemies[i][j][2] > 0) {
+					all_enemies[i][j][0] -= all_enemies[i][j][4];
+				} else if (all_enemies[i][j][0] + all_enemies[i][j][2] < 1) {
+					all_enemies[i][j][0] = width + 10;
+				}
+			  }
+		}
+	  }
+   //} else break;
+}
+
+function drawLaser() {
+  if (lasers.length)
+    for (var i = 0; i < lasers.length; i++) {
+		/*if (shoot){
+		    if ((ship_x>=0) && (ship_x<width/6)) { lasers[i][4] = 0;  }
+				else if ((ship_x>=width/6) && (ship_x<2*width/6)) { lasers[i][4] = 1;  }
+				else if ((ship_x>=2*width/6) && (ship_x<3*width/6)) { lasers[i][4] = 2;  }
+				else if ((ship_x>=3*width/6) && (ship_x<4*width/6)) { lasers[i][4] = 3;  }
+				else if((ship_x>=4*width/6) && (ship_x<5*width/6)) { lasers[i][4] = 4;  }
+				else if((ship_x>=5*width/6) && (ship_x<=width)) { lasers[i][4] = 5;  }
+				else alarm("danger!");
+			shoot = false;
+		}*/
+		ctx.fillStyle = chooseColor(lasers[i][4]);
+        ctx.fillRect(lasers[i][0],lasers[i][1],lasers[i][2],lasers[i][3])
+   }
+}
+function moveLaser() {
+ for (var i = 0; i < lasers.length; i++) {
+   if (lasers[i][1] > -11) {
+      lasers[i][1] -= 10;
+    } else if (lasers[i][1] < -10) {
+     lasers.splice(i, 1);
+   }
+ }
+}
+
+function hitTest() {
+ var remove = false;
+ for (var i = 0; i < lasers.length; i++) {
+   for (var j = 0; j < all_enemies.length; j++) {
+		for (var k = 0; k < all_enemies[j].length; k++) {
+			if (lasers[i][1] <= (all_enemies[j][k][1] + all_enemies[j][k][3]) && lasers[i][0] >= all_enemies[j][k][0] && lasers[i][0] <= (all_enemies[j][k][0] + all_enemies[j][k][2])) {
+				if (lasers[i][4] == all_enemies[j][k][5] && all_enemies[j][k][6] == false) {
+						remove = true;
+						all_enemies[j][k][6] = true;
+						//all_enemies[j].splice(k, 1);
+				} else if (all_enemies[j][k][6] == true) break;
+				else lasers.splice(i, 1);
+                                //enemies1.push([(Math.random() * 500) + 50, -45, enemy_w, enemy_h, speed]);
+			}
+			if (lasers[i][1] <= (winline_y + winline_h) && lasers[i][0] >= winline_x && lasers[i][0] <= (winline_x + winline_w)) {
+				win = true;
+				clearCanvas();
+				ctx.fillStyle = '#000';
+				ctx.fillText('You Win!', 245, height / 2);
+			}
+		}
+    }
+    if (remove == true) {
+      lasers.splice(i, 1);
+      remove = false;
+    }
+  }
+}
+
+function init() {
+  canvas = document.getElementById('canvas');
+  ctx = canvas.getContext('2d');
+  ship = new Image();
+  ship.src = "def.png";
+  setInterval(gameLoop, 25);
+  document.addEventListener('keydown', keyDown, false);
+  document.addEventListener('keyup', keyUp, false);
+}
+
+function gameLoop() {
+  clearCanvas();
+  hitTest();
+  moveEnemies();
+  moveLaser();
+  drawEnemies();
+  drawShip();
+  drawLaser();
+}
+
+function keyDown(e) {
+  if (e.keyCode == 39) rightKey = true;
+  else if (e.keyCode == 37) leftKey = true;
+  /*if (e.keyCode == 38) upKey = true;
+  else if (e.keyCode == 40) downKey = true;*/
+  if (e.keyCode == 32 && lasers.length <= laserTotal) { lasers.push([ship_x + 25, ship_y - 20, 4, 20, chooseLaser()]); }
+}
+
+function keyUp(e) {
+  if (e.keyCode == 39) rightKey = false;
+  else if (e.keyCode == 37) leftKey = false;
+  /*if (e.keyCode == 38) upKey = false;
+  else if (e.keyCode == 40) downKey = false;*/
+}
+
+window.onload = init;
+</script>
+</head>
+
+<body>
+  <canvas id="canvas" width="600" height="600"></canvas>
+</body>
+</html>

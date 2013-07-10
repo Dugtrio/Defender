@@ -1,0 +1,60 @@
+<html>
+<head>
+<script language="JavaScript">
+
+n = 2;
+move = 500;
+flag = true;
+var defender = document.getElementById("def");
+//var cannon = document.getElementById("cannon");
+//var cannon = new Image();
+//cannon.src = "cannon.png";
+
+
+function def_move_mouse(event){
+pos_x = event.pageX - 18;
+pos_y = event.pageY - 13;
+document.getElementById("def").style.left = pos_x;
+document.getElementById("def").style.top = pos_y;
+}
+
+function shoot_final(event){
+    var c = document.getElementById("can");
+	n = 2;
+	
+    document.getElementById("can").style.left = event.pageX - 3;
+	document.getElementById("can").style.top =  event.pageY - 13;
+	move = event.pageY - 13;
+    //cannon_init(event);
+    if (flag) window.setInterval("shoot();",1);
+	flag = false;
+}
+
+function shoot(){
+document.getElementById("can").style.top = move;
+move -=n;
+if (move < 1) n = -n;
+if (move > 500) n = -n;
+}
+
+function cannon_init(event){
+
+document.getElementById("can").style.left = event.pageX - 18;
+document.getElementById("can").style.top = event.pageY - 13;
+
+}
+
+</script>
+
+
+<body onmousemove = "def_move_mouse(event)" onmousedown = "shoot_final(event)">
+
+<div id="def"  style= "position:absolute; z-index: 2; visibility:visible; top: 150px; left: 10px;">
+<img src="def.png" id="defendr" /> 
+
+</div>
+
+<!-- <img src="cannon.png" id="cannon"  /> -->
+<div id="can" style= "position:absolute; z-index: 3; visibility:visible;">
+<img src="cannon.png" id="cann" /> 
+</div> 
